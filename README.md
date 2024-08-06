@@ -1,6 +1,7 @@
 # Wifi Deauthenticator
 
 *On Debian/Ubuntu/Kali/other debian based distributions for PC you don't need modprobe and monstart/monstop commands*
+
 *For raspberry pi zero w, zero 2 w, 3 and 4 ( excluding the 5 you can run the below commands after you've patched the wireless firmware and the kernel )
 
 ## Usage
