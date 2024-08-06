@@ -36,4 +36,4 @@ sudo ./monstop
 ```bash
 sudo ./wifi_deauth.sh rpi
 ```
-*run without rpi argument for Debian/Ubuntu/Kali or other debian based distributions for Desktop )
+*run without rpi argument for Debian/Ubuntu/Kali or other debian based distributions for Desktop*
