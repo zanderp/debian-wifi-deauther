@@ -302,7 +302,7 @@ echo -e "${bold}${green}##########################${normal}"
 count=0
 networks=()
 while IFS=, read -r bssid first_seen last_seen channel speed privacy cipher authentication power beacons iv lanip id_length essid key; do
-  if [[ $bssid =~ ^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$ && $channel -ge 1 && $channel -le 14 ]]; then
+  if [[ $bssid =~ ^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$ && $channel -ge 1 && $channel -le 177 ]]; then
     networks+=("$bssid,$channel,$essid")
     echo -e "${bold}${blue}$count)${normal} ${bold}${cyan}$essid ($bssid) on channel $channel${normal}"
     ((count++))
