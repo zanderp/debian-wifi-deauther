@@ -287,7 +287,7 @@ fi
 # Step 2: Scan for networks to get BSSID and channel
 echo -e "${bold}${green}Scanning for networks (will stop automatically after 1 minute)...${normal}"
 custom_prompt
-timeout 15s airodump-ng $MONITOR_INTERFACE --output-format csv -w scan_results &
+timeout 15s airodump-ng $MONITOR_INTERFACE -b abg --output-format csv -w scan_results &
 SCAN_PID=$!
 wait $SCAN_PID
 
